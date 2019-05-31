@@ -2,11 +2,15 @@
   "name": "labb-backend-chat-app",
   "version": "0.1.0",
   "private": true,
+  "proxy": "http://localhost:3001",
   "dependencies": {
+    "axios": "^0.19.0",
     "express": "^4.17.0",
     "react": "^16.8.6",
     "react-dom": "^16.8.6",
+    "react-router-dom": "^5.0.0",
     "react-scripts": "3.0.1",
+    "rxjs": "^6.5.2",
     "socket.io-client": "^2.2.0"
   },
   "scripts": {

@@ -1,6 +1,9 @@
 const express = require("express");
 const http = require('http');
 const app = express();
+const rooms = require("./rooms.json");
+const uuid = require('uuid/v1');
+
 
 const server = http.createServer(app);
 // Pass a http.Server instance to the listen method
@@ -13,20 +16,32 @@ server.listen(3001, function () {
 
 app.use(express.json()); // Sparar datan i req.body
 
-let user;
+let user = [];
 let chatrooms = [];
-let currentId = 0;
 
 function generateNewId() { // ge en unic id till my-message
-    const rv = `my-message-${currentId}`;
-    currentId += 1;
-    return rv;
+    return uuid();
 }
+
+console.log(generateNewId());
+
+/* interval(() => {
+    fs.writeFile("./rooms.json", JSON.stringify(rooms), function (err) {
+        if (err) throw err;
+        console.log("done with fs writeFile", rooms);
+    });
+}, 3000); */
 
 
 app.get('/', function (req, res) {
     if (!req.body) return res.status(500).end();
     res.status(200).json({ chatrooms });
+});
+
+
+app.get("/chatrooms", (_, res) => {
+    console.log(rooms);
+    res.status(200).send(rooms);
 });
 
 app.get('/chatrooms/:id', (req, res) => {
@@ -35,7 +50,7 @@ app.get('/chatrooms/:id', (req, res) => {
         res.status(400).end(); //  Bad Request
         return;
     }
-    const room = chatrooms.find(room => room.id === id);
+    const room = rooms.chatrooms.find(room => room.id === id);
     if (room) {
         res.json(room);
     } else {
@@ -53,8 +68,8 @@ app.post('/chatrooms', function (req, res) {
         name: body.name,
         allMessages: []
     };
-    chatrooms.push(room);
 
+    rooms.chatrooms.push(room);
     res.status(201).json(room); // Created
 });
 
@@ -63,15 +78,15 @@ app.post("/chatrooms/:id/message", (req, res) => {
     const id = parseInt(generateNewId(req.params.id));
     let body = req.body;
 
-    for (let idx in chatrooms) {
-        if (chatrooms[idx].id === id) {
+    for (let idx in rooms.chatrooms) {
+        if (rooms.chatrooms[idx].id === id) {
             let message = {
                 from: user,
                 value: body.value,
                 id: generateNewId()
             };
 
-            chatrooms[idx].allMessages.push(message);
+            rooms.chatrooms[idx].allMessages.push(message);
             res.status(201).send(message); // Created
             return;
         }
@@ -83,7 +98,7 @@ app.post("/login", (req, res) => {
     let body = req.body;
 
     if (body.user) {
-        user = body.user;
+        user.push(body.user);
         res.status(200).send(user);
     } else {
         res.status(401).end(); // Unauthorized
