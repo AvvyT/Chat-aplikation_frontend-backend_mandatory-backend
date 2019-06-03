@@ -1,9 +1,9 @@
-import React, { useState } from 'react';
-import { Link } from "react-router-dom";
-import Room from './Room';
+import React, { useState, useEffect } from 'react';
+//import { Link } from "react-router-dom";
+import axios from 'axios';
+import { Redirect } from "react-router-dom";
 
-let rooms = []; 
-function Chatroom(props) {
+function Chatroom() {
     const [room, updateRoom] = useState('room');
     const [inlogadRoom, updateInlogadroom] = useState(false);
 
@@ -13,12 +13,28 @@ function Chatroom(props) {
         updateInlogadroom(!status.inlogadRoom);
     }
 
+    useEffect(() => {
+        axios
+            .get("/chatrooms")
+            .then(response => {
+                console.log(response.data);
+                updateRoom(response.data);
+            })
+            .catch(error => {
+                console.log(error);
+            });
+    }, []);
+
+   /*  if (!inlogadRoom) {
+        return <Redirect to="/room" />;
+    } */
 
     return (
         <div>
-            {/* {(!inlogadRoom) ? <Chatroom /> : <Room room={room} />} */}
             <h1>Choose room or create new Room!</h1>
-            <h2>Hello {props.username}!</h2>
+
+            <h2>Hello {room.data}!</h2>
+
             <p>Chatroom side...</p>
         </div>
     );
