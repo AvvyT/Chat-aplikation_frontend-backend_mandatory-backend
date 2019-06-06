@@ -3,8 +3,9 @@ const http = require('http');
 const app = express();
 const rooms = require("./rooms.json");
 const uuid = require('uuid/v1');
+const fs = require("fs");
 
-
+/* --------*Conect to server*--------- */
 const server = http.createServer(app);
 // Pass a http.Server instance to the listen method
 const io = require('socket.io').listen(server);
@@ -16,7 +17,7 @@ server.listen(3001, function () {
 
 app.use(express.json()); // Sparar datan i req.body
 
-let user = [];
+let user;
 let chatrooms = [];
 
 function generateNewId() { // ge en unic id till my-message
@@ -41,6 +42,7 @@ app.get('/', function (req, res) {
 
 app.get("/chatrooms", (_, res) => {
     console.log(rooms);
+
     res.status(200).send(rooms);
 });
 
@@ -58,7 +60,7 @@ app.get('/chatrooms/:id', (req, res) => {
     }
 });
 
-// make one room
+// make new room
 app.post('/chatrooms', function (req, res) {
     if (!req.body) res.status(400).send('Bad Request');
     const body = req.body;
@@ -66,11 +68,23 @@ app.post('/chatrooms', function (req, res) {
     let room = {
         id: generateNewId(),
         name: body.name,
-        allMessages: []
+        messages: []
     };
-
     rooms.chatrooms.push(room);
-    res.status(201).json(room); // Created
+
+    let json = JSON.stringify(rooms);
+    console.log('string-data:...' + json);
+
+    fs.writeFile('rooms.json', json, (err) => {
+        if (err) {
+            res.status(500).end();
+            return;
+        }
+        console.log('Data written to file');
+    });
+    console.log('This is after the write call');
+
+    res.status(201).end(); // Created
 });
 
 // make new message
@@ -86,7 +100,7 @@ app.post("/chatrooms/:id/message", (req, res) => {
                 id: generateNewId()
             };
 
-            rooms.chatrooms[idx].allMessages.push(message);
+            rooms.chatrooms[idx].messages.push(message);
             res.status(201).send(message); // Created
             return;
         }
@@ -98,13 +112,30 @@ app.post("/login", (req, res) => {
     let body = req.body;
 
     if (body.user) {
-        user.push(body.user);
+        user = body.user;
         res.status(200).send(user);
     } else {
         res.status(401).end(); // Unauthorized
     }
 });
 
+app.delete("/chatrooms/:id", (req, res) => {
+    const id = req.params.id;
+
+    if (!id) {
+        res.status(400).end(); // klientErr-Bad Request
+        return;
+    }
+
+    const roomIdx = rooms.chatrooms.findIndex(room => room.id === id);
+    console.log("delete index:" + roomIdx);
+
+    if (roomIdx !== -1) {
+        rooms.chatrooms.splice(roomIdx, 1);
+    }
+    res.status(204).end();
+
+});
 
 
 
