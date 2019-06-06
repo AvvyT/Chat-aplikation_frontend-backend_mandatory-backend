@@ -18,7 +18,7 @@ function Login() {
         axios.post("/login", { user: username })
             .then(response => {
                 console.log(response);
-                updateLogin(true);
+                updateLogin(username);
             })
             .catch((error) => {
                 console.log(error);
@@ -31,7 +31,7 @@ function Login() {
         <Redirect to="/chatroom" />) :
         (<div className='App'>
 
-            <h1>React Instant Rooms-Chat</h1>
+            <h1 style={{ color: 'lightgreen' }}>React Instant Rooms-Chat</h1>
             <h2>Login</h2>
             <input maxLength={11}
                 style={{ fontSize: '22px' }}
