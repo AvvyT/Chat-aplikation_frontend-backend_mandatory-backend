@@ -2,6 +2,7 @@ const express = require("express");
 const http = require('http');
 const app = express();
 const rooms = require("./rooms.json");
+//const usersnames = require("./usersnames.json");
 const uuid = require('uuid/v1');
 const fs = require("fs");
 
@@ -64,7 +65,25 @@ app.get('/chatrooms/:id', (req, res) => {
 app.post('/chatrooms', function (req, res) {
     if (!req.body) res.status(400).send('Bad Request');
     const body = req.body;
+    const name = body.name;
 
+    // - alla rum ska ha ett unikt namn.
+    const roomIdx = rooms.chatrooms.findIndex(room => room.name.toLowerCase() === name.toLowerCase());
+    console.log("post index:" + roomIdx);
+
+    // -udvika skicka tomt namn
+    if (name.length === 0) {
+        res.status(406).send("You most write a name"); // Not Acceptable
+        return;
+    }
+    // -1 betyder att rummet inte finns i rooms.chatrooms
+    // -1 får man alltid när man FindIndex metoden inte hittar det man letar efter i arrayen
+    // t.ex 2 betyder att det fanns ett rum med samma namn på index 2 i rooms.chatrooms
+    if (roomIdx !== -1) {
+        // roomIdx är inte -1. Detta betyder att rummet redan finns 
+        res.status(409).end(console.log("The name alredy exists!")); // Conflict
+        return;
+    }
     let room = {
         id: generateNewId(),
         name: body.name,
@@ -133,8 +152,18 @@ app.delete("/chatrooms/:id", (req, res) => {
     if (roomIdx !== -1) {
         rooms.chatrooms.splice(roomIdx, 1);
     }
-    res.status(204).end();
+    // save file
+    let json = JSON.stringify(rooms);
+    console.log('delete: string-data:...' + json);
 
+    fs.writeFile('rooms.json', json, (err) => {
+        if (err) {
+            res.status(500).end();
+            return;
+        }
+        console.log('Data written efter delete:');
+    });
+    res.status(204).end(); // No Content
 });
 
 
