@@ -2,14 +2,14 @@ import React, { useState, useEffect } from 'react';
 import { Link } from "react-router-dom";
 import axios from 'axios';
 import { login$ } from '../store';
-//import { Redirect } from "react-router-dom";
+
+// ** Man ska kunna skapa och ta bort rum.
 
 function Chatroom() {
     const [rooms, updateRooms] = useState([]);
     const [newRoom, updateNewRoom] = useState([]);
 
     const onChangeRoom = (e) => updateNewRoom(e.target.value);
-
 
     useEffect(() => {
         getRooms();
@@ -45,14 +45,15 @@ function Chatroom() {
     const handleDelete = (id) => {
 
         axios.delete(`/chatrooms/${id}`)
-            .then(_ => getRooms())
+            .then((response) => {
+                getRooms();
+                console.log(response);
+            })
             .catch(error => {
                 console.log(error);
             })
     }
-    /*  if (!inlogadRoom) {
-         return <Redirect to="/room" />;
-     } */
+
 
     return (
         <div>
@@ -79,7 +80,7 @@ function Chatroom() {
                 <ul>
                     {rooms.map((room) => (
                         <li style={{ listStyleType: 'none', color: '#FFF0F5' }} key={room.id}>
-                            <Link to="/room/:id" style={{ color: '#ff00ff' }}>{room.name}</Link>
+                            <Link to={`/room/${room.id}`} style={{ color: '#ff00ff' }}>{room.name}</Link>
                             <button style={{
                                 marginLeft: '5px', color: 'red', fontSize: '20px', borderRadius: '50%'
                             }}

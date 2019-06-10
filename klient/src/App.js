@@ -42,7 +42,7 @@ function App() {
 
         <Route path="/" exact component={Login} />
         <Route path="/chatroom" component={Chatroom} />
-        <Route path="/room" component={Room} />
+        <Route path="/room/:id" component={Room} />
 
       </div>
     </Router>
