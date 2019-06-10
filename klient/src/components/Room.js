@@ -4,10 +4,6 @@ import { login$ } from '../store';
 import io from "socket.io-client";
 const socket = io('http://localhost:3001');
 
-// ** Skriver man i ett specifikt rum ska meddelandet endast visa i rummet.
-// ** Chatten ska ha stöd för real-time meddelanden (rekommenderar socket.io).
-// ** Meddelanden ska sparas långsiktigt (i en eller flera filer),när startars servern ska allt vara kvar.
-
 
 function Room() {
     const [message, updateMessage] = useState("");
@@ -20,33 +16,39 @@ function Room() {
     const pathSplit = window.location.pathname.split('/');
     // nu har vi en array med 3 delar där sista är vårat id så vi tar ut det
     //console.log(pathSplit);
-
     const roomId = pathSplit[2];
 
     useEffect(() => {
+        // ** Chatten ska ha stöd för real-time meddelanden (rekommenderar socket.io).
+        // new message is sent to the server
+        socket.on('message', function (data) {
+            // console.log(data);
+            // method is used to merge two or more arrays
+            updateMessages(x => x.concat(data));
+        });
+
         axios
             .get('/room/' + roomId)
             .then(response => {
                 console.log(response.data);
                 updateRoom(response.data.name);
                 updateMessages(response.data.messages);
+                setSenders(response.data.messages);
             })
             .catch(error => {
                 console.log(error);
-            })
-    }, []);
+            });
 
-    // new message is sent to the server
-    socket.on('message', function (data) {
-        // console.log(data);
-        messages.push(data);
-        updateMessages(messages);
-    });
+        return () => {
+            socket.off("message");
+        };
+    }, [roomId]);
 
+    // ** Skriver man i ett specifikt rum ska meddelandet endast visa i rummet.
     const sendMessage = (e) => {
         e.preventDefault();
+        
         // ** Varje meddelande har info om vem som skrev det.
-
         let messageData = { content: message, sender: login$.value, roomId };
         axios
             .post(`/room/${roomId}`, { messageData })
@@ -62,6 +64,18 @@ function Room() {
         }
 
         updateMessage('');
+    }
+
+    const setSenders = (messages) => {
+        const copUsers = [...users];
+
+        for (let message of messages) {
+            const userIdx = copUsers.findIndex(user => user.toLowerCase() === message.sender.toLowerCase());
+            if (userIdx === -1) {
+                copUsers.push(message.sender);
+            }
+        }
+        updateUsers(copUsers);
     }
     //console.log(messages);
 

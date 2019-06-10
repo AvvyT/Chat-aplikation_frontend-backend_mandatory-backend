@@ -3,7 +3,6 @@ import { Link } from "react-router-dom";
 import axios from 'axios';
 import { login$ } from '../store';
 
-// ** Man ska kunna skapa och ta bort rum.
 
 function Chatroom() {
     const [rooms, updateRooms] = useState([]);
@@ -27,6 +26,7 @@ function Chatroom() {
             });
     }
 
+    // ** Man ska kunna skapa och ta bort rum.
     const createRoom = (e) => {
         e.preventDefault();
         let name = newRoom;
