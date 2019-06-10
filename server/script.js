@@ -9,7 +9,7 @@ const fs = require("fs");
 /* --------*Conect to server*--------- */
 const server = http.createServer(app);
 // Pass a http.Server instance to the listen method
-const io = require('socket.io').listen(server);
+const io = require('socket.io')(server);
 
 // The server should start listening
 server.listen(3001, function () {
@@ -24,15 +24,7 @@ let chatrooms = [];
 function generateNewId() { // ge en unic id till my-message
     return uuid();
 }
-
 console.log(generateNewId());
-
-/* interval(() => {
-    fs.writeFile("./rooms.json", JSON.stringify(rooms), function (err) {
-        if (err) throw err;
-        console.log("done with fs writeFile", rooms);
-    });
-}, 3000); */
 
 
 app.get('/', function (req, res) {
@@ -40,15 +32,14 @@ app.get('/', function (req, res) {
     res.status(200).json({ chatrooms });
 });
 
-
 app.get("/chatrooms", (_, res) => {
     console.log(rooms);
 
     res.status(200).send(rooms);
 });
 
-app.get('/chatrooms/:id', (req, res) => {
-    const id = parseInt(generateNewId(req.params.id));
+app.get('/room/:id', (req, res) => {
+    const id = req.params.id;
     if (!id) {
         res.status(400).end(); //  Bad Request
         return;
@@ -107,24 +98,36 @@ app.post('/chatrooms', function (req, res) {
 });
 
 // make new message
-app.post("/chatrooms/:id/message", (req, res) => {
-    const id = parseInt(generateNewId(req.params.id));
-    let body = req.body;
+app.post("/room/:id", (req, res) => {
+    let body = req.body.messageData;
 
-    for (let idx in rooms.chatrooms) {
-        if (rooms.chatrooms[idx].id === id) {
-            let message = {
-                from: user,
-                value: body.value,
-                id: generateNewId()
-            };
+    if (!body || !body.content || !body.sender) {
+        res.status(400).end();
+        return;
+    }
 
-            rooms.chatrooms[idx].messages.push(message);
-            res.status(201).send(message); // Created
+    //rooms id
+    const id = req.params.id;
+
+    //skapar ny meddelande
+    let message = {
+        id: generateNewId(),
+        sender: body.sender,
+        content: body.content
+    };
+
+    let room = rooms.chatrooms.find(room => room.id === id);
+    room.messages.push(message);
+
+    fs.writeFile('rooms.json', JSON.stringify(rooms), (err) => {
+        if (err) {
+            res.status(500).end();
             return;
         }
-    }
-    res.status(404).end(); // clientErr Not Found
+        console.log('Data written efter newMessege');
+        io.emit('message', message);
+        res.status(201).send(message); // Created
+    });
 });
 
 app.post("/login", (req, res) => {
@@ -168,19 +171,14 @@ app.delete("/chatrooms/:id", (req, res) => {
 
 
 
-// Handle connection
+/* // Handle connection
 io.on('connection', function (socket) {
-    console.log("Connected succesfully to the socket ...");
+    console.log("Connected succesfully to the socket ..." + socket);
 
-    let messages = [
-        { title: 'The cure of the Sadness is to play Videogames', date: '04.10.2016' },
-    ];
 
-    // Send news on the socket
-    socket.emit('message', messages);
-});
+    socket.on('message', function (message) {
+        console.log('incomming message: ' + message)
+        socket.emit('message', message);
+    });
+}); */
 
-const PORT = 8080;
-app.listen(PORT, function () {
-    console.log('listening on', PORT);
-});
