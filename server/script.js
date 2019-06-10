@@ -2,7 +2,6 @@ const express = require("express");
 const http = require('http');
 const app = express();
 const rooms = require("./rooms.json");
-//const usersnames = require("./usersnames.json");
 const uuid = require('uuid/v1');
 const fs = require("fs");
 
@@ -82,6 +81,7 @@ app.post('/chatrooms', function (req, res) {
     };
     rooms.chatrooms.push(room);
 
+    // ** Meddelanden ska sparas långsiktigt (i en eller flera filer),när startars servern ska allt vara kvar.
     let json = JSON.stringify(rooms);
     console.log('string-data:...' + json);
 
@@ -169,16 +169,4 @@ app.delete("/chatrooms/:id", (req, res) => {
     res.status(204).end(); // No Content
 });
 
-
-
-/* // Handle connection
-io.on('connection', function (socket) {
-    console.log("Connected succesfully to the socket ..." + socket);
-
-
-    socket.on('message', function (message) {
-        console.log('incomming message: ' + message)
-        socket.emit('message', message);
-    });
-}); */
 
