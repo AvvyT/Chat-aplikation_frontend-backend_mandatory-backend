@@ -36,14 +36,6 @@ function Room() {
             })
     }, []);
 
-    //  a list of all messages on the server
-    socket.on("messages", data => {
-        for (let message of data) {
-
-            sendMessage(message);
-        }
-    });
-
     // new message is sent to the server
     socket.on('message', function (data) {
         // console.log(data);
@@ -55,8 +47,11 @@ function Room() {
         e.preventDefault();
         // ** Varje meddelande har info om vem som skrev det.
 
-        let messageData = { content: message, sender: login$.value, id: '' };
-        socket.emit('message', messageData);
+        let messageData = { content: message, sender: login$.value, roomId };
+        axios
+            .post(`/room/${roomId}`, { messageData })
+            .then(_ => updateMessage(""))
+            .catch(err => console.log(err));
 
         // ** Varje rum ska ha en lista på alla användare som har skrivit något tidigare.
         const copUsers = [...users];
@@ -65,10 +60,10 @@ function Room() {
             copUsers.push(login$.value);
             updateUsers(copUsers);
         }
-        
+
         updateMessage('');
     }
-    console.log(messages);
+    //console.log(messages);
 
     return (
         <div>
